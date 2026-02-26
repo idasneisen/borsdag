@@ -245,8 +245,8 @@
 
   <script>
     // CSV-lenken din fra "Publiser til nett"
-    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQF8Kguqba5fwBSKC9S5rN_uJSnbAuSN-ANr5sewxinUs2KfoGn2hLq_aBTtoui6QECfb2VKXyPh_bI/pub?gid=0&single=true&output=csv";
-
+    const CSV_URL = "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://docs.google.com/spreadsheets/d/e/2PACX-1vQF8Kguqba5fwBSKC9S5rN_uJSnbAuSN-ANr5sewxinUs2KfoGn2hLq_aBTtoui6QECfb2VKXyPh_bI/pub?gid=0&single=true&output=csv");
+    
     // Auto refresh hvert 10. sekund
     const REFRESH_MS = 10_000;
 
