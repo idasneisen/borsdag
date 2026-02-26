@@ -4,535 +4,151 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Børsdagspartay – Leaderboard</title>
+
   <style>
-    :root{
-      --bg1:#070a14;
-      --bg2:#0e1633;
-      --stroke:#2a3563;
-      --text:#f6f7ff;
-      --muted:#b9c1ff;
-
-      --gold:#ffcc00;
-      --silver:#c0c0c0;
-      --bronze:#cd7f32;
-
-      --card:#0f1633cc;
-      --tile:#0b1230cc;
-    }
-    *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      color:var(--text);
-      background:
-        radial-gradient(1000px 600px at 20% 10%, #7c3aed55, transparent 60%),
-        radial-gradient(900px 520px at 80% 20%, #22d3ee33, transparent 55%),
-        radial-gradient(700px 420px at 50% 95%, #f59e0b22, transparent 55%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
+      font-family: system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at top left,#5b2cff,#001b3f);
+      color:white;
       min-height:100vh;
       display:flex;
-      align-items:center;
       justify-content:center;
-      padding:24px;
-      overflow-x:hidden;
+      align-items:center;
+      padding:30px;
     }
-    .wrap{width:min(950px, 100%);}
 
-    header{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:14px;
+    .container{
+      width:900px;
+      max-width:100%;
     }
+
     h1{
-      margin:0;
-      font-size: clamp(28px, 4vw, 48px);
-      letter-spacing: .6px;
-    }
-    .meta{
-      color:var(--muted);
-      font-size:14px;
-      text-align:right;
-      line-height:1.3;
-      white-space:nowrap;
+      font-size:48px;
+      margin-bottom:20px;
     }
 
     .board{
-      border:1px solid var(--stroke);
-      background: linear-gradient(180deg, var(--card), #0a1030aa);
-      backdrop-filter: blur(10px);
-      border-radius:26px;
-      padding:14px;
-      box-shadow: 0 24px 80px #00000066;
-      overflow:hidden;
-      position:relative;
-    }
-
-    /* FLIP container (animere rekkefølge) */
-    .list{
-      position:relative;
+      background:rgba(0,0,0,0.3);
+      padding:20px;
+      border-radius:20px;
     }
 
     .row{
-      display:grid;
-      grid-template-columns: 70px 1fr 160px;
-      gap:12px;
+      display:flex;
+      justify-content:space-between;
       align-items:center;
-      padding:16px 16px;
-      border-radius:18px;
-      border:1px solid transparent;
-      background: linear-gradient(180deg, #0c1433cc, #0a122dcc);
-      box-shadow: 0 10px 30px #00000033;
-      position:absolute; /* for FLIP */
-      left:0; right:0;
-      will-change: transform;
-      transition: transform 520ms cubic-bezier(.2,.9,.2,1);
+      padding:15px 20px;
+      margin-bottom:12px;
+      border-radius:15px;
+      font-size:22px;
+      font-weight:600;
+      transition:0.4s;
+      background:rgba(255,255,255,0.08);
     }
+
+    .top1{background:rgba(255,215,0,0.25);}
+    .top2{background:rgba(192,192,192,0.25);}
+    .top3{background:rgba(205,127,50,0.25);}
 
     .rank{
-      width:56px;height:56px;
-      display:grid;place-items:center;
-      border-radius:18px;
-      border:1px solid var(--stroke);
-      background: linear-gradient(180deg, #0b1230, #070d22);
       font-weight:900;
-      font-size:20px;
-      position:relative;
-      overflow:hidden;
-    }
-    .rank::after{
-      content:"";
-      position:absolute;
-      inset:-40%;
-      background: radial-gradient(circle, #ffffff22, transparent 60%);
-      transform: rotate(20deg);
-      animation: shimmer 3.5s linear infinite;
-      opacity:.7;
-    }
-    @keyframes shimmer{
-      0%{transform:translateX(-30%) rotate(20deg)}
-      100%{transform:translateX(30%) rotate(20deg)}
+      margin-right:15px;
     }
 
-    .name{
-      font-size:22px;
-      font-weight:900;
-      letter-spacing:.2px;
-      text-shadow: 0 6px 30px #00000055;
-    }
-
-    .scoreWrap{
-      text-align:right;
-      display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      gap:2px;
-    }
-    .score{
-      font-size:34px;
-      font-weight:1000;
-      letter-spacing:.3px;
-      line-height:1;
-    }
-    .delta{
-      font-size:13px;
-      color:var(--muted);
-      min-height:16px;
-    }
-    .delta.pop{
-      animation: pop 650ms cubic-bezier(.2,1.2,.2,1);
-    }
-    @keyframes pop{
-      0%{transform:translateY(6px); opacity:0}
-      35%{transform:translateY(-2px); opacity:1}
-      100%{transform:translateY(0); opacity:.95}
-    }
-
-    .medal{
-      font-size:18px;
-      margin-right:8px;
-      filter: drop-shadow(0 10px 12px #00000066);
-    }
-    .nameLine{
+    .left{
       display:flex;
       align-items:center;
-      gap:4px;
-      min-width:0;
-    }
-    .nameText{
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
     }
 
-    /* Top 3 styling */
-    .top1{
-      border-color: #ffcc0066;
-      background: linear-gradient(90deg, #ffcc001c, transparent 55%);
-      box-shadow: 0 18px 50px #ffcc001f, 0 10px 30px #00000033;
-    }
-    .top2{
-      border-color: #c0c0c066;
-      background: linear-gradient(90deg, #c0c0c018, transparent 55%);
-    }
-    .top3{
-      border-color: #cd7f3266;
-      background: linear-gradient(90deg, #cd7f3218, transparent 55%);
+    .score{
+      font-size:26px;
+      font-weight:900;
     }
 
     .status{
-      margin-top:10px;
-      color:var(--muted);
-      font-size:13px;
-      text-align:center;
+      margin-top:15px;
+      opacity:0.7;
     }
+
     .error{
-      white-space:pre-line;
-      color:#ffd1d1;
-      background:#ff2d2d22;
-      border:1px solid #ff2d2d44;
-      padding:10px 12px;
-      border-radius:14px;
-      margin-top:12px;
+      margin-top:15px;
+      padding:15px;
+      border-radius:10px;
+      background:#ff2d2d33;
       display:none;
-    }
-
-    /* Confetti */
-    .confetti{
-      position:fixed;
-      top:-12px;
-      width:10px;
-      height:14px;
-      opacity:.9;
-      pointer-events:none;
-      filter: drop-shadow(0 10px 10px #00000055);
-      animation: fall linear forwards;
-      z-index:9999;
-    }
-    @keyframes fall{
-      to{
-        transform: translateY(110vh) rotate(720deg);
-        opacity:1;
-      }
-    }
-
-    @media (max-width:620px){
-      .row{grid-template-columns: 56px 1fr 120px;}
-      .name{font-size:18px}
-      .score{font-size:24px}
-      .rank{width:48px;height:48px;border-radius:16px}
+      white-space:pre-line;
     }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <header>
-      <h1>Børsdagspartay</h1>
-      <div class="meta">
-        <div>Oppdateres automatisk</div>
-        <div id="lastUpdated">—</div>
-      </div>
-    </header>
+  <div class="container">
+    <h1>Børsdagspartay</h1>
 
-    <div class="board">
-      <div class="list" id="list"></div>
-    </div>
+    <div class="board" id="board"></div>
 
-    <div class="status" id="status">Laster…</div>
+    <div class="status" id="status">Laster...</div>
     <div class="error" id="error"></div>
   </div>
 
   <script>
-    // CSV-lenken din fra "Publiser til nett"
-const DATA_URL = "https://opensheet.elk.sh/1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ/Poeng";
-    
-    // Auto refresh hvert 10. sekund
-    const REFRESH_MS = 10_000;
+    // === VIKTIG ===
+    // Hvis fanen nederst i Google Sheet heter noe annet enn "Poeng",
+    // bytt ut Poeng i denne linjen.
+    const DATA_URL = "https://opensheet.elk.sh/1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ/Poeng";
 
-    // Confetti når noen tar 1. plass:
-    const CONFETTI_ON_LEAD_CHANGE = true;
+    const REFRESH_MS = 10000;
 
-    const listEl = document.getElementById("list");
+    const board = document.getElementById("board");
     const statusEl = document.getElementById("status");
     const errorEl = document.getElementById("error");
-    const lastUpdatedEl = document.getElementById("lastUpdated");
 
-    // State
-    const prevByName = new Map(); // name -> {score, rank}
-    let lastLeader = null;
-    let rowHeight = 0;
+    async function load(){
+      errorEl.style.display = "none";
+      try{
+        const res = await fetch(DATA_URL + "?t=" + Date.now());
+        if(!res.ok) throw new Error("Kunne ikke hente data");
 
-    function parseCSV(text){
-      const lines = text.trim().split(/\r?\n/);
-      return lines
-        .map(l => l.split(","))
-        .map(cols => cols.map(c => c.replace(/^"|"$/g, "").trim()));
-    }
+        const json = await res.json();
 
-    function escapeHtml(str){
-      return str.replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[m]));
-    }
-
-    function medalFor(rank){
-      if(rank === 1) return "🥇";
-      if(rank === 2) return "🥈";
-      if(rank === 3) return "🥉";
-      return "";
-    }
-
-    function classForRank(rank){
-      if(rank === 1) return "top1";
-      if(rank === 2) return "top2";
-      if(rank === 3) return "top3";
-      return "";
-    }
-
-    function spawnConfetti(){
-      const count = 70;
-      for(let i=0;i<count;i++){
-        const el = document.createElement("div");
-        el.className = "confetti";
-        el.style.left = (Math.random()*100) + "vw";
-        el.style.animationDuration = (2.8 + Math.random()*1.8) + "s";
-        el.style.animationDelay = (Math.random()*0.25) + "s";
-        el.style.transform = `translateY(0) rotate(${Math.random()*360}deg)`;
-        // tilfeldige farger:
-        el.style.background = ["#ffcc00","#22d3ee","#7c3aed","#fb7185","#a7f3d0","#c4b5fd"][Math.floor(Math.random()*6)];
-        el.style.borderRadius = (Math.random() > 0.5 ? "2px" : "999px");
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 5000);
-      }
-    }
-
-    // FLIP animation helpers
-    function capturePositions(){
-      const pos = new Map();
-      [...listEl.children].forEach(el => {
-        const name = el.getAttribute("data-name");
-        pos.set(name, el.getBoundingClientRect());
-      });
-      return pos;
-    }
-
-    function applyFlip(prevPos){
-      const newPos = new Map();
-      [...listEl.children].forEach(el => {
-        const name = el.getAttribute("data-name");
-        newPos.set(name, el.getBoundingClientRect());
-      });
-
-      [...listEl.children].forEach(el => {
-        const name = el.getAttribute("data-name");
-        const a = prevPos.get(name);
-        const b = newPos.get(name);
-        if(!a || !b) return;
-        const dx = a.left - b.left;
-        const dy = a.top - b.top;
-
-        if(dx || dy){
-          el.style.transition = "none";
-          el.style.transform = `translate(${dx}px, ${dy}px)`;
-          // force reflow
-          el.getBoundingClientRect();
-          el.style.transition = "transform 520ms cubic-bezier(.2,.9,.2,1)";
-          el.style.transform = "translate(0,0)";
-        }
-      });
-    }
-
-    function ensureRowHeight(){
-      // Finn høyde første gang:
-      if(rowHeight) return;
-      const temp = document.createElement("div");
-      temp.className = "row";
-      temp.style.position = "static";
-      temp.style.visibility = "hidden";
-      temp.innerHTML = `
-        <div class="rank">1</div>
-        <div class="name"><div class="nameLine"><span class="medal">🥇</span><span class="nameText">Test</span></div></div>
-        <div class="scoreWrap"><div class="score">999</div><div class="delta">+0</div></div>
-      `;
-      listEl.appendChild(temp);
-      const rect = temp.getBoundingClientRect();
-      rowHeight = rect.height + 10; // include margin gap-ish
-      temp.remove();
-    }
-
-    function setContainerHeight(n){
-      ensureRowHeight();
-      listEl.style.height = (n * rowHeight) + "px";
-    }
-
-    function buildOrUpdateRows(data){
-      // Opprett / oppdater elementer per lag
-      const existing = new Map([...listEl.children].map(el => [el.getAttribute("data-name"), el]));
-
-      data.forEach(item => {
-        const key = item.name;
-        let el = existing.get(key);
-
-        if(!el){
-          el = document.createElement("div");
-          el.className = "row";
-          el.setAttribute("data-name", key);
-          el.innerHTML = `
-            <div class="rank"></div>
-            <div class="name">
-              <div class="nameLine">
-                <span class="medal"></span>
-                <span class="nameText"></span>
-              </div>
-            </div>
-            <div class="scoreWrap">
-              <div class="score"></div>
-              <div class="delta"></div>
-            </div>
-          `;
-          listEl.appendChild(el);
-        }
-
-        // Oppdater innhold
-        const rankEl = el.querySelector(".rank");
-        const medalEl = el.querySelector(".medal");
-        const nameEl = el.querySelector(".nameText");
-        const scoreEl = el.querySelector(".score");
-        const deltaEl = el.querySelector(".delta");
-
-        rankEl.textContent = item.rank;
-        medalEl.textContent = medalFor(item.rank);
-        nameEl.textContent = item.name;
-        scoreEl.textContent = item.score;
-
-        // delta (poeng-endring)
-        const prev = prevByName.get(key);
-        const delta = prev ? (item.score - prev.score) : 0;
-        if(prev){
-          if(delta !== 0){
-            deltaEl.textContent = (delta > 0 ? `+${delta}` : `${delta}`) + " poeng";
-            deltaEl.classList.remove("pop");
-            // restart animasjon
-            void deltaEl.offsetWidth;
-            deltaEl.classList.add("pop");
-          } else {
-            deltaEl.textContent = "";
-            deltaEl.classList.remove("pop");
-          }
-        } else {
-          deltaEl.textContent = "";
-          deltaEl.classList.remove("pop");
-        }
-
-        // klasse for topp 3
-        el.classList.remove("top1","top2","top3");
-        const cls = classForRank(item.rank);
-        if(cls) el.classList.add(cls);
-
-        // plassering i listen (absolutt posisjon)
-        ensureRowHeight();
-        const y = (item.rank - 1) * rowHeight;
-        el.style.transform = `translate(0, ${y}px)`;
-      });
-
-      // Fjern rader som ikke finnes lenger
-      existing.forEach((el, name) => {
-        if(!data.find(d => d.name === name)){
-          el.remove();
-          prevByName.delete(name);
-        }
-      });
-
-      setContainerHeight(data.length);
-    }
-
-  async function load(){
-  errorEl.style.display = "none";
-  try{
-    const url = DATA_URL + "?t=" + Date.now();
-    const res = await fetch(url, { cache: "no-store" });
-    if(!res.ok) throw new Error("Kunne ikke hente data (HTTP " + res.status + ")");
-    const json = await res.json();
-
-    // Forventer kolonner med navn: Lag og Poeng (første rad i arket)
-    const data = json
-      .filter(r => (r.Lag ?? "").trim() !== "")
-      .map(r => ({
-        name: String(r.Lag).trim(),
-        score: Number(String(r.Poeng ?? "0").replace(/\s/g,"")) || 0
-      }))
-      .sort((a,b) => b.score - a.score)
-      .map((x, i) => ({...x, rank: i+1}));
-
-    const leader = data[0]?.name ?? null;
-    if (typeof CONFETTI_ON_LEAD_CHANGE !== "undefined" && CONFETTI_ON_LEAD_CHANGE && leader && lastLeader && leader !== lastLeader){
-      spawnConfetti();
-    }
-    if (leader) lastLeader = leader;
-
-    statusEl.textContent = data.length ? `Viser ${data.length} lag` : "Ingen data funnet";
-    const now = new Date();
-    lastUpdatedEl.textContent =
-      "Sist oppdatert: " + now.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-
-    buildOrUpdateRows(data);
-
-    prevByName.clear();
-    data.forEach(d => prevByName.set(d.name, {score:d.score, rank:d.rank}));
-
-  }catch(e){
-    errorEl.style.display = "block";
-    errorEl.textContent =
-      "Feil: " + e.message + "\n\n" +
-      "Tips:\n" +
-      "• Sjekk at første rad i arket har kolonnene: Lag og Poeng.\n" +
-      "• Sjekk at arknavnet i DATA_URL er riktig.";
-    statusEl.textContent = "Kunne ikke oppdatere.";
-  }
-}
-
-        // Fjern header hvis første rad ser ut som header
-        if (rows.length && rows[0][0]?.toLowerCase() === "lag") rows.shift();
-
-        const data = rows
-          .filter(r => r.length >= 2 && r[0])
+        const data = json
+          .filter(r => r.Lag)
           .map(r => ({
-            name: r[0],
-            score: Number(String(r[1]).replace(/\s/g, "")) || 0
+            name: r.Lag,
+            score: Number(r.Poeng) || 0
           }))
-          .sort((a,b) => b.score - a.score)
-          .map((x, i) => ({...x, rank: i+1}));
+          .sort((a,b) => b.score - a.score);
 
-        // confetti om ny leder
-        const leader = data[0]?.name ?? null;
-        if(CONFETTI_ON_LEAD_CHANGE && leader && lastLeader && leader !== lastLeader){
-          spawnConfetti();
-        }
-        if(leader) lastLeader = leader;
+        board.innerHTML = "";
 
-        // Status + time
-        statusEl.textContent = data.length ? `Viser ${data.length} lag` : "Ingen data funnet";
-        const now = new Date();
-        lastUpdatedEl.textContent =
-          "Sist oppdatert: " + now.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        data.forEach((team, index) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          if(index === 0) row.classList.add("top1");
+          if(index === 1) row.classList.add("top2");
+          if(index === 2) row.classList.add("top3");
 
-        // Oppdater rows med FLIP-lignende effekt:
-        // (Vi bruker absoluttpos og flytter til ny y)
-        buildOrUpdateRows(data);
+          row.innerHTML = `
+            <div class="left">
+              <div class="rank">${index+1}</div>
+              <div>${team.name}</div>
+            </div>
+            <div class="score">${team.score}</div>
+          `;
 
-        // lagre state
-        prevByName.clear();
-        data.forEach(d => prevByName.set(d.name, {score:d.score, rank:d.rank}));
+          board.appendChild(row);
+        });
+
+        statusEl.textContent = "Oppdateres automatisk";
 
       }catch(e){
         errorEl.style.display = "block";
         errorEl.textContent =
-          "Feil: " + e.message + "\n\n" +
-          "Tips:\n" +
-          "• Sjekk at Google Sheets er 'Publisert til nett' som CSV.\n" +
-          "• Sjekk at arket har to kolonner: Lag, Poeng.\n" +
-          "• Unngå komma i lagnavn (CSV kan bli rar).";
+          "Feil ved lasting.\n\n" +
+          "Sjekk:\n" +
+          "• At arknavnet er riktig (nå: Poeng)\n" +
+          "• At kolonnene heter: Lag og Poeng";
         statusEl.textContent = "Kunne ikke oppdatere.";
       }
     }
