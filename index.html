@@ -245,7 +245,7 @@
 
   <script>
     // CSV-lenken din fra "Publiser til nett"
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQF8Kguqba5fwBSKC9S5rN_uJSnbAuSN-ANr5sewxinUs2KfoGn2hLq_aBTtoui6QECfb2VKXyPh_bI/gviz/tq?tqx=out:csv";
+const DATA_URL = "https://opensheet.elk.sh/1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ/Poeng";
     
     // Auto refresh hvert 10. sekund
     const REFRESH_MS = 10_000;
@@ -447,14 +447,50 @@ const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQF8Kguqba5fwBS
       setContainerHeight(data.length);
     }
 
-    async function load(){
-      errorEl.style.display = "none";
-      try{
-        const url = CSV_URL + (CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now();
-        const res = await fetch(url, { cache: "no-store" });
-        if(!res.ok) throw new Error("Kunne ikke hente data (HTTP " + res.status + ")");
-        const text = await res.text();
-        const rows = parseCSV(text);
+  async function load(){
+  errorEl.style.display = "none";
+  try{
+    const url = DATA_URL + "?t=" + Date.now();
+    const res = await fetch(url, { cache: "no-store" });
+    if(!res.ok) throw new Error("Kunne ikke hente data (HTTP " + res.status + ")");
+    const json = await res.json();
+
+    // Forventer kolonner med navn: Lag og Poeng (første rad i arket)
+    const data = json
+      .filter(r => (r.Lag ?? "").trim() !== "")
+      .map(r => ({
+        name: String(r.Lag).trim(),
+        score: Number(String(r.Poeng ?? "0").replace(/\s/g,"")) || 0
+      }))
+      .sort((a,b) => b.score - a.score)
+      .map((x, i) => ({...x, rank: i+1}));
+
+    const leader = data[0]?.name ?? null;
+    if (typeof CONFETTI_ON_LEAD_CHANGE !== "undefined" && CONFETTI_ON_LEAD_CHANGE && leader && lastLeader && leader !== lastLeader){
+      spawnConfetti();
+    }
+    if (leader) lastLeader = leader;
+
+    statusEl.textContent = data.length ? `Viser ${data.length} lag` : "Ingen data funnet";
+    const now = new Date();
+    lastUpdatedEl.textContent =
+      "Sist oppdatert: " + now.toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+
+    buildOrUpdateRows(data);
+
+    prevByName.clear();
+    data.forEach(d => prevByName.set(d.name, {score:d.score, rank:d.rank}));
+
+  }catch(e){
+    errorEl.style.display = "block";
+    errorEl.textContent =
+      "Feil: " + e.message + "\n\n" +
+      "Tips:\n" +
+      "• Sjekk at første rad i arket har kolonnene: Lag og Poeng.\n" +
+      "• Sjekk at arknavnet i DATA_URL er riktig.";
+    statusEl.textContent = "Kunne ikke oppdatere.";
+  }
+}
 
         // Fjern header hvis første rad ser ut som header
         if (rows.length && rows[0][0]?.toLowerCase() === "lag") rows.shift();
