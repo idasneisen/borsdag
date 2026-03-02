@@ -44,8 +44,8 @@
     .top2{background:rgba(192,192,192,0.25);}
     .top3{background:rgba(205,127,50,0.25);}
 
-    .rank{ font-weight:900; margin-right:15px; }
-    .left{ display:flex; align-items:center; }
+    .left{ display:flex; align-items:center; gap:18px; }
+    .rank{ font-weight:900; min-width:28px; text-align:right; }
     .score{ font-size:26px; font-weight:900; }
 
     .status{ margin-top:15px; opacity:0.7; }
@@ -70,74 +70,90 @@
   </div>
 
   <script>
-    // Google Sheet
+    // ========= KONFIG =========
     const SHEET_ID = "1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ";
-    const SHEET_NAME = "Poeng"; // må matche fanenavnet
-    const DATA_URL =
-  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?` +
-  `tqx=out:json&gid=0&tq=${encodeURIComponent("select A, B label A 'Lag', B 'Poeng' format A '@'")}`;
-    const REFRESH_MS = 10000;
+    const GID = "0";              // fanens gid (ofte 0 på første ark)
+    const REFRESH_MS = 10000;     // 10 sek
+
+    // CSV-export fra Google Sheets (stabilt)
+    const DATA_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
+    // ==========================
 
     const board = document.getElementById("board");
     const statusEl = document.getElementById("status");
     const errorEl = document.getElementById("error");
 
-    async function load(){
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) return [];
+
+      // Finn delimiter: semikolon eller komma
+      const headerLine = lines[0];
+      const delim = headerLine.includes(";") ? ";" : ",";
+
+      const headers = headerLine.split(delim).map(h => h.trim().toLowerCase());
+      const lagIdx = headers.indexOf("lag");
+      const poengIdx = headers.indexOf("poeng");
+
+      if (lagIdx === -1 || poengIdx === -1) {
+        throw new Error("CSV må ha kolonnene 'Lag' og 'Poeng' i første rad.");
+      }
+
+      const rows = lines.slice(1).map(line => line.split(delim));
+
+      return rows.map(cols => {
+        const name = (cols[lagIdx] ?? "").trim();
+        const scoreRaw = (cols[poengIdx] ?? "").trim().replace(",", "."); // hvis noen skriver 10,5
+        const score = Number(scoreRaw) || 0;
+        return { name, score };
+      }).filter(r => r.name);
+    }
+
+    async function load() {
       errorEl.style.display = "none";
       statusEl.textContent = "Henter data…";
 
-      // Timeout så den aldri kan henge “for alltid”
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 7000);
 
-      try{
+      try {
         const res = await fetch(DATA_URL + "&t=" + Date.now(), { signal: controller.signal });
         clearTimeout(timeout);
 
-        if(!res.ok) throw new Error("HTTP " + res.status);
+        if (!res.ok) throw new Error("Kunne ikke hente data (HTTP " + res.status + ")");
 
-        const text = await res.text();
+        const csv = await res.text();
+        const data = parseCSV(csv).sort((a,b) => b.score - a.score);
 
-        // gviz returnerer: google.visualization.Query.setResponse({...});
-        const jsonStr = text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1);
-        const obj = JSON.parse(jsonStr);
-
-        const rows = obj?.table?.rows || [];
-
-        const data = rows.map(r => {
-  const cellLag = r.c?.[0];
-  const cellPoeng = r.c?.[1];
-
-  const name = (cellLag?.f ?? cellLag?.v ?? "").toString().trim(); // f først!
-  const score = Number(cellPoeng?.v ?? cellPoeng?.f) || 0;
-
-  return { name, score };
-})
+        // VIKTIG: tøm før vi tegner (hindrer duplikater)
+        board.innerHTML = "";
 
         data.forEach((team, index) => {
           const row = document.createElement("div");
           row.className = "row";
-          if(index === 0) row.classList.add("top1");
-          if(index === 1) row.classList.add("top2");
-          if(index === 2) row.classList.add("top3");
+          if (index === 0) row.classList.add("top1");
+          if (index === 1) row.classList.add("top2");
+          if (index === 2) row.classList.add("top3");
 
           row.innerHTML = `
             <div class="left">
-              <div class="rank">${index+1}</div>
+              <div class="rank">${index + 1}</div>
               <div>${team.name}</div>
             </div>
             <div class="score">${team.score}</div>
           `;
+
           board.appendChild(row);
         });
 
         statusEl.textContent = "Oppdateres automatisk";
-      }catch(e){
+      } catch (e) {
         clearTimeout(timeout);
         errorEl.style.display = "block";
         errorEl.textContent =
-          "Feil ved lasting:\n\n" + (e?.name === "AbortError" ? "Timeout (7 sek). Sjekk nett/blokkering." : (e?.message || e)) +
-          "\n\nSjekk også:\n• At arket er delt: Alle med linken kan se\n• At fanen heter nøyaktig: Poeng";
+          "Feil ved lasting:\n\n" +
+          (e?.name === "AbortError" ? "Timeout (7 sek). Sjekk nett/blokkering." : (e?.message || e)) +
+          "\n\nSjekk:\n• At arket er delt: Alle med linken kan se\n• At rad 1 heter: Lag | Poeng\n• At du bruker riktig gid (fanen)";
         statusEl.textContent = "Kunne ikke oppdatere.";
         console.error(e);
       }
