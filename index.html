@@ -75,7 +75,7 @@
     const SHEET_NAME = "Poeng"; // må matche fanenavnet
     const DATA_URL =
   `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?` +
-  `tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&tq=${encodeURIComponent("select A, B")}`;
+  `tqx=out:json&gid=0&tq=${encodeURIComponent("select A, B label A 'Lag', B 'Poeng' format A '@'")}`;
     const REFRESH_MS = 10000;
 
     const board = document.getElementById("board");
