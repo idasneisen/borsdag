@@ -93,77 +93,70 @@
   </div>
 
   <script>
-  // Hvis fanen nederst i Google Sheet heter noe annet enn "Poeng",
-  // bytt ut Poeng i denne linjen.
-  const DATA_URL = "https://opensheet.elk.sh/1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ/Poeng";
-  const REFRESH_MS = 10000;
+    // Hvis fanen nederst i Google Sheet heter noe annet enn "Poeng",
+    // bytt ut Poeng i denne linjen.
+    const DATA_URL = "https://opensheet.elk.sh/1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ/Poeng";
+    const REFRESH_MS = 10000;
 
-  const board = document.getElementById("board");
-  const statusEl = document.getElementById("status");
-  const errorEl = document.getElementById("error");
+    const board = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    const errorEl = document.getElementById("error");
 
-  async function load() {
-    errorEl.style.display = "none";
+    console.log("SCRIPT STARTER");
+    statusEl.textContent = "Henter data…";
 
-    try {
-      const res = await fetch(DATA_URL + "?t=" + Date.now());
+    async function load() {
+      errorEl.style.display = "none";
+      statusEl.textContent = "Henter data…";
 
-      console.log("STATUS:", res.status);
-      console.log("CONTENT-TYPE:", res.headers.get("content-type"));
+      try {
+        const res = await fetch(DATA_URL + "?t=" + Date.now());
 
-      if (!res.ok) throw new Error("Kunne ikke hente data (HTTP " + res.status + ")");
+        console.log("STATUS:", res.status);
+        console.log("CONTENT-TYPE:", res.headers.get("content-type"));
 
-      const json = await res.json();
-      console.log("DATA:", json);
+        if (!res.ok) throw new Error("Kunne ikke hente data (HTTP " + res.status + ")");
 
-      const data = json
-        .filter(r => r.Lag)
-        .map(r => ({
-          name: r.Lag,
-          score: Number(r.Poeng) || 0
-        }))
-        .sort((a, b) => b.score - a.score);
+        const json = await res.json();
+        console.log("DATA:", json);
 
-      board.innerHTML = "";
+        const data = json
+          .filter(r => r.Lag)
+          .map(r => ({
+            name: r.Lag,
+            score: Number(r.Poeng) || 0
+          }))
+          .sort((a, b) => b.score - a.score);
 
-      data.forEach((team, index) => {
-        const row = document.createElement("div");
-        row.className = "row";
-        if (index === 0) row.classList.add("top1");
-        if (index === 1) row.classList.add("top2");
-        if (index === 2) row.classList.add("top3");
+        board.innerHTML = "";
 
-        row.innerHTML = `
-          <div class="left">
-            <div class="rank">${index + 1}</div>
-            <div>${team.name}</div>
-          </div>
-          <div class="score">${team.score}</div>
-        `;
+        data.forEach((team, index) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          if (index === 0) row.classList.add("top1");
+          if (index === 1) row.classList.add("top2");
+          if (index === 2) row.classList.add("top3");
 
-        board.appendChild(row);
-      });
+          row.innerHTML = `
+            <div class="left">
+              <div class="rank">${index + 1}</div>
+              <div>${team.name}</div>
+            </div>
+            <div class="score">${team.score}</div>
+          `;
 
-      statusEl.textContent = "Oppdateres automatisk";
-    } catch (e) {
-      errorEl.style.display = "block";
-      errorEl.textContent = "Feil ved lasting:\n\n" + (e?.message || e);
-      statusEl.textContent = "Kunne ikke oppdatere.";
-      console.error("FETCH ERROR:", e);
+          board.appendChild(row);
+        });
+
+        statusEl.textContent = "Oppdateres automatisk";
+      } catch (e) {
+        errorEl.style.display = "block";
+        errorEl.textContent = "Feil ved lasting:\n\n" + (e?.message || e);
+        statusEl.textContent = "Kunne ikke oppdatere.";
+        console.error("FETCH ERROR:", e);
+      }
     }
-  }
 
-  load();
-  setInterval(load, REFRESH_MS);
-</script>
-
-        
-
-
-const res = await fetch(DATA_URL + "?t=" + Date.now());
-console.log("STATUS", res.status);
-console.log("CONTENT-TYPE", res.headers.get("content-type"));
-      
     load();
     setInterval(load, REFRESH_MS);
   </script>
