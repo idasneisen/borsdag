@@ -18,15 +18,8 @@
       padding:30px;
     }
 
-    .container{
-      width:900px;
-      max-width:100%;
-    }
-
-    h1{
-      font-size:48px;
-      margin-bottom:20px;
-    }
+    .container{ width:900px; max-width:100%; }
+    h1{ font-size:48px; margin-bottom:20px; }
 
     .board{
       background:rgba(0,0,0,0.3);
@@ -51,25 +44,11 @@
     .top2{background:rgba(192,192,192,0.25);}
     .top3{background:rgba(205,127,50,0.25);}
 
-    .rank{
-      font-weight:900;
-      margin-right:15px;
-    }
+    .rank{ font-weight:900; margin-right:15px; }
+    .left{ display:flex; align-items:center; }
+    .score{ font-size:26px; font-weight:900; }
 
-    .left{
-      display:flex;
-      align-items:center;
-    }
-
-    .score{
-      font-size:26px;
-      font-weight:900;
-    }
-
-    .status{
-      margin-top:15px;
-      opacity:0.7;
-    }
+    .status{ margin-top:15px; opacity:0.7; }
 
     .error{
       margin-top:15px;
@@ -85,75 +64,82 @@
 <body>
   <div class="container">
     <h1>Børsdagspartay</h1>
-
     <div class="board" id="board"></div>
-
     <div class="status" id="status">Laster...</div>
     <div class="error" id="error"></div>
   </div>
 
   <script>
-    // Hvis fanen nederst i Google Sheet heter noe annet enn "Poeng",
-    // bytt ut Poeng i denne linjen.
-    const DATA_URL = "https://opensheet.elk.sh/1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ/Poeng";
+    // Google Sheet
+    const SHEET_ID = "1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ";
+    const SHEET_NAME = "Poeng"; // må matche fanenavnet
+    const DATA_URL =
+      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
     const REFRESH_MS = 10000;
 
     const board = document.getElementById("board");
     const statusEl = document.getElementById("status");
     const errorEl = document.getElementById("error");
 
-    console.log("SCRIPT STARTER");
-    statusEl.textContent = "Henter data…";
-
-    async function load() {
+    async function load(){
       errorEl.style.display = "none";
       statusEl.textContent = "Henter data…";
 
-      try {
-        const res = await fetch(DATA_URL + "?t=" + Date.now());
+      // Timeout så den aldri kan henge “for alltid”
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 7000);
 
-        console.log("STATUS:", res.status);
-        console.log("CONTENT-TYPE:", res.headers.get("content-type"));
+      try{
+        const res = await fetch(DATA_URL + "&t=" + Date.now(), { signal: controller.signal });
+        clearTimeout(timeout);
 
-        if (!res.ok) throw new Error("Kunne ikke hente data (HTTP " + res.status + ")");
+        if(!res.ok) throw new Error("HTTP " + res.status);
 
-        const json = await res.json();
-        console.log("DATA:", json);
+        const text = await res.text();
 
-        const data = json
-          .filter(r => r.Lag)
-          .map(r => ({
-            name: r.Lag,
-            score: Number(r.Poeng) || 0
-          }))
-          .sort((a, b) => b.score - a.score);
+        // gviz returnerer: google.visualization.Query.setResponse({...});
+        const jsonStr = text.substring(text.indexOf("{"), text.lastIndexOf("}") + 1);
+        const obj = JSON.parse(jsonStr);
+
+        const rows = obj?.table?.rows || [];
+
+        // Kolonne A = Lag, kolonne B = Poeng
+        const data = rows.map(r => ({
+          name: (r.c?.[0]?.v ?? "").toString().trim(),
+          score: Number(r.c?.[1]?.v) || 0
+        }))
+        .filter(r => r.name)
+        .sort((a,b) => b.score - a.score);
 
         board.innerHTML = "";
 
         data.forEach((team, index) => {
           const row = document.createElement("div");
           row.className = "row";
-          if (index === 0) row.classList.add("top1");
-          if (index === 1) row.classList.add("top2");
-          if (index === 2) row.classList.add("top3");
+          if(index === 0) row.classList.add("top1");
+          if(index === 1) row.classList.add("top2");
+          if(index === 2) row.classList.add("top3");
 
           row.innerHTML = `
             <div class="left">
-              <div class="rank">${index + 1}</div>
+              <div class="rank">${index+1}</div>
               <div>${team.name}</div>
             </div>
             <div class="score">${team.score}</div>
           `;
-
           board.appendChild(row);
         });
 
         statusEl.textContent = "Oppdateres automatisk";
-      } catch (e) {
+      }catch(e){
+        clearTimeout(timeout);
         errorEl.style.display = "block";
-        errorEl.textContent = "Feil ved lasting:\n\n" + (e?.message || e);
+        errorEl.textContent =
+          "Feil ved lasting:\n\n" + (e?.name === "AbortError" ? "Timeout (7 sek). Sjekk nett/blokkering." : (e?.message || e)) +
+          "\n\nSjekk også:\n• At arket er delt: Alle med linken kan se\n• At fanen heter nøyaktig: Poeng";
         statusEl.textContent = "Kunne ikke oppdatere.";
-        console.error("FETCH ERROR:", e);
+        console.error(e);
       }
     }
 
