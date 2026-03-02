@@ -1,288 +1,589 @@
 <!doctype html>
 <html lang="no">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Børsdagspartay</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Børsdagspartay – Leaderboard</title>
 
-<style>
-:root{
-  --bg1:#5b2cff;
-  --bg2:#001b3f;
-}
+  <style>
+    :root{
+      --bg1:#5b2cff;
+      --bg2:#001b3f;
+      --card: rgba(255,255,255,0.10);
+      --card2: rgba(255,255,255,0.14);
+      --glow: rgba(120,70,255,0.55);
+      --text: #fff;
+      --muted: rgba(255,255,255,0.75);
+    }
 
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,sans-serif;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:30px;
-  color:white;
-  background:radial-gradient(circle at top left,var(--bg1),var(--bg2));
-  overflow:hidden;
-}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:30px;
+      overflow-x:hidden;
+      background:
+        radial-gradient(circle at top left, var(--bg1), var(--bg2));
+      position:relative;
+    }
 
-.container{width:900px;max-width:100%;}
+    /* Kahoot-ish shimmer */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.14), transparent 35%),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,0.10), transparent 35%),
+        radial-gradient(circle at 60% 80%, rgba(255,255,255,0.08), transparent 40%),
+        conic-gradient(from 180deg, rgba(91,44,255,0.10), rgba(0,27,63,0.10), rgba(91,44,255,0.10));
+      filter: blur(14px);
+      animation: floaty 10s ease-in-out infinite;
+      pointer-events:none;
+      opacity:0.85;
+    }
 
-h1{
-  font-size:60px;
-  margin:0 0 20px 0;
-  font-weight:900;
-  letter-spacing:-1px;
-}
+    @keyframes floaty{
+      0%,100%{ transform: translate3d(-1%, -1%, 0) rotate(-2deg); }
+      50%{ transform: translate3d(1%, 1%, 0) rotate(2deg); }
+    }
 
-.board{
-  background:rgba(0,0,0,0.3);
-  padding:20px;
-  border-radius:25px;
-  backdrop-filter:blur(10px);
-}
+    .container{ width:900px; max-width:100%; position:relative; z-index:1; }
 
-.row{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:16px 20px;
-  margin-bottom:12px;
-  border-radius:18px;
-  font-size:24px;
-  font-weight:800;
-  background:rgba(255,255,255,0.12);
-  transition:transform 0.5s cubic-bezier(.2,.9,.2,1);
-}
+    h1{
+      font-size:56px;
+      margin:0 0 16px 0;
+      letter-spacing:-0.02em;
+      text-shadow: 0 10px 40px rgba(0,0,0,0.35);
+    }
 
-.row:last-child{margin-bottom:0;}
+    .board{
+      background: rgba(0,0,0,0.25);
+      padding:18px;
+      border-radius:26px;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.12);
+      position:relative;
+    }
 
-.top1{box-shadow:0 0 25px rgba(255,215,0,0.5);}
-.top2{box-shadow:0 0 25px rgba(192,192,192,0.4);}
-.top3{box-shadow:0 0 25px rgba(205,127,50,0.4);}
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:16px 18px;
+      margin-bottom:12px;
+      border-radius:18px;
+      font-size:22px;
+      font-weight:700;
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+      backdrop-filter: blur(6px);
+      transform: translateZ(0);
+    }
 
-.left{display:flex;align-items:center;gap:15px;}
-.rank{
-  font-weight:900;
-  background:rgba(255,255,255,0.2);
-  padding:6px 14px;
-  border-radius:12px;
-}
+    .row:last-child{ margin-bottom:0; }
 
-.score{
-  font-size:34px;
-  font-weight:950;
-}
+    .row.bump{
+      animation: bump 650ms cubic-bezier(.2,.9,.2,1);
+    }
 
-.status{
-  margin-top:15px;
-  opacity:0.8;
-  font-weight:600;
-}
+    @keyframes bump{
+      0%{ transform: scale(1); }
+      30%{ transform: scale(1.03); }
+      100%{ transform: scale(1); }
+    }
 
-canvas{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-}
+    .row:hover{
+      background: var(--card2);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.25);
+    }
 
-.overlay{
-  position:fixed;
-  inset:0;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  background:rgba(0,0,0,0.6);
-}
+    .top1{ box-shadow: 0 0 0 1px rgba(255,215,0,0.20), 0 22px 60px rgba(255,215,0,0.18); }
+    .top2{ box-shadow: 0 0 0 1px rgba(192,192,192,0.18), 0 22px 60px rgba(192,192,192,0.14); }
+    .top3{ box-shadow: 0 0 0 1px rgba(205,127,50,0.18), 0 22px 60px rgba(205,127,50,0.14); }
 
-.overlay.show{display:flex;}
+    .left{ display:flex; align-items:center; gap:14px; }
 
-.podium{
-  background:#111;
-  padding:40px;
-  border-radius:30px;
-  text-align:center;
-}
+    .rank{
+      font-weight:900;
+      min-width:38px;
+      height:38px;
+      display:grid;
+      place-items:center;
+      border-radius:12px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
 
-.podium h2{margin-top:0;font-size:40px;}
+    .team{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      min-width:0;
+    }
 
-</style>
+    .teamName{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:520px;
+    }
+
+    .badge{
+      font-size:18px;
+      opacity:0.95;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.25));
+    }
+
+    .score{
+      font-size:30px;
+      font-weight:950;
+      letter-spacing:-0.02em;
+      text-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    }
+
+    .status{
+      margin-top:14px;
+      opacity:0.8;
+      font-weight:600;
+      color: var(--muted);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .error{
+      margin-top:15px;
+      padding:15px;
+      border-radius:12px;
+      background:#ff2d2d33;
+      display:none;
+      white-space:pre-line;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    /* ======= PODIUM OVERLAY ======= */
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,0.62);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:999;
+      padding:22px;
+    }
+    .overlay.show{ display:flex; }
+
+    .finalCard{
+      width:min(920px, 100%);
+      border-radius:28px;
+      background: rgba(10,10,25,0.60);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 30px 120px rgba(0,0,0,0.55);
+      backdrop-filter: blur(10px);
+      padding:22px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .finalTitle{
+      font-size:44px;
+      font-weight:950;
+      margin:0 0 16px 0;
+      letter-spacing:-0.02em;
+    }
+
+    .podium{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:14px;
+      align-items:end;
+      margin-top:8px;
+    }
+
+    .pod{
+      border-radius:22px;
+      padding:16px 16px 18px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.14);
+      text-align:center;
+      position:relative;
+      overflow:hidden;
+      transform: translateY(8px);
+      animation: popIn 650ms cubic-bezier(.2,.9,.2,1) forwards;
+    }
+    @keyframes popIn{ to{ transform: translateY(0); } }
+
+    .pod small{ display:block; opacity:0.8; font-weight:700; margin-bottom:6px; }
+    .pod .name{ font-size:22px; font-weight:950; margin:6px 0 6px; }
+    .pod .pts{ font-size:28px; font-weight:950; }
+
+    .p2{ height:170px; }
+    .p1{ height:220px; background: rgba(255,215,0,0.18); border-color: rgba(255,215,0,0.26); }
+    .p3{ height:150px; }
+
+    .closeBtn{
+      position:absolute;
+      top:14px;
+      right:14px;
+      border:none;
+      background: rgba(255,255,255,0.12);
+      color:white;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:800;
+      cursor:pointer;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+    .closeBtn:hover{ background: rgba(255,255,255,0.18); }
+
+    canvas#confetti{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:1000;
+      display:none;
+    }
+    canvas#confetti.show{ display:block; }
+  </style>
 </head>
 
 <body>
+  <canvas id="confetti"></canvas>
 
-<canvas id="confetti"></canvas>
+  <div class="container">
+    <h1>Børsdagspartay</h1>
 
-<div class="container">
-<h1>Børsdagspartay</h1>
-<div class="board" id="board"></div>
-<div class="status" id="status">Laster...</div>
-</div>
+    <div class="board" id="board"></div>
 
-<div class="overlay" id="overlay">
-  <div class="podium" id="podium"></div>
-</div>
+    <div class="status">
+      <div id="status">Laster...</div>
+      <div id="updated"></div>
+    </div>
+    <div class="error" id="error"></div>
+  </div>
 
-<script>
+  <!-- Podium overlay -->
+  <div class="overlay" id="overlay">
+    <div class="finalCard">
+      <button class="closeBtn" id="closeBtn">Lukk ✕</button>
+      <h2 class="finalTitle">Pallen 🏆</h2>
+      <div class="podium" id="podium"></div>
+    </div>
+  </div>
 
-const SHEET_ID="1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ";
-const GID="0";
-const REFRESH_MS=4000;
+  <script>
+    // ========= KONFIG =========
+    const SHEET_ID = "1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ";
+    const GID = "0";                 // bytt hvis fanen har annet gid
+    const REFRESH_MS = 6000;         // litt mer “live”
+    const END_COLUMN_NAME = "avslutt"; // kolonnenavn i arket
+    const END_VALUES = new Set(["ja","slutt","end","ferdig","stop"]);
+    // ==========================
 
-const DATA_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
+    const DATA_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
 
-const board=document.getElementById("board");
-const statusEl=document.getElementById("status");
-const overlay=document.getElementById("overlay");
-const podium=document.getElementById("podium");
+    const board = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    const updatedEl = document.getElementById("updated");
+    const errorEl = document.getElementById("error");
 
-let prevScores={};
-let prevLeader=null;
-let initialized=false;
+    const overlay = document.getElementById("overlay");
+    const podiumEl = document.getElementById("podium");
+    const closeBtn = document.getElementById("closeBtn");
 
-function parseCSV(text){
-  const lines=text.trim().split(/\r?\n/);
-  const delim=lines[0].includes(";")?";":",";
-  const headers=lines[0].split(delim).map(h=>h.trim().toLowerCase());
+    let lastOrder = []; // for å oppdage endringer
+    let finalShown = false;
 
-  const lagIdx=headers.indexOf("lag");
-  const poengIdx=headers.indexOf("poeng");
-  const endIdx=headers.indexOf("avslutt");
-
-  let ended=false;
-
-  const data=lines.slice(1).map(l=>{
-    const cols=l.split(delim);
-    const name=(cols[lagIdx]||"").trim();
-    const score=Number((cols[poengIdx]||"").replace(",","."));
-    if(endIdx!==-1){
-      const v=(cols[endIdx]||"").toLowerCase();
-      if(v==="ja") ended=true;
+    function detectDelimiter(headerLine){
+      return headerLine.includes(";") ? ";" : ",";
     }
-    return {name,score};
-  }).filter(x=>x.name);
 
-  return {data,ended};
-}
-
-function render(data){
-  data.sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name,"no"));
-  board.innerHTML="";
-  data.forEach((t,i)=>{
-    const row=document.createElement("div");
-    row.className="row";
-    if(i===0)row.classList.add("top1");
-    if(i===1)row.classList.add("top2");
-    if(i===2)row.classList.add("top3");
-    row.innerHTML=`
-      <div class="left">
-        <div class="rank">${i+1}</div>
-        <div>${t.name}</div>
-      </div>
-      <div class="score">${t.score}</div>
-    `;
-    board.appendChild(row);
-  });
-}
-
-function handleCelebration(data){
-  const sorted=[...data].sort((a,b)=>b.score-a.score);
-  const leaderNow=sorted[0]?.name;
-
-  let increased=false;
-  for(const t of sorted){
-    if(prevScores[t.name]!==undefined && t.score>prevScores[t.name]){
-      increased=true;
-      break;
+    function safeSplit(line, delim){
+      // Enkel split (ok så lenge dere ikke har delimiter inni lagnavn)
+      return line.split(delim);
     }
-  }
 
-  prevScores=Object.fromEntries(sorted.map(t=>[t.name,t.score]));
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) return { data: [], ended: false };
 
-  if(!initialized){
-    initialized=true;
-    prevLeader=leaderNow;
-    return;
-  }
+      const delim = detectDelimiter(lines[0]);
+      const headersRaw = safeSplit(lines[0], delim).map(h => h.trim());
+      const headers = headersRaw.map(h => h.trim().toLowerCase());
 
-  if(increased) startConfetti(2000);
+      const lagIdx = headers.indexOf("lag");
+      const poengIdx = headers.indexOf("poeng");
+      const endIdx = headers.indexOf(END_COLUMN_NAME);
 
-  if(prevLeader && leaderNow && leaderNow!==prevLeader){
-    startConfetti(4000);
-  }
+      if (lagIdx === -1 || poengIdx === -1) {
+        throw new Error("Arket må ha kolonnene 'Lag' og 'Poeng' i første rad.");
+      }
 
-  prevLeader=leaderNow;
-}
+      let ended = false;
 
-async function load(){
-  const res=await fetch(DATA_URL+"?t="+Date.now());
-  const csv=await res.text();
-  const {data,ended}=parseCSV(csv);
+      const rows = lines.slice(1).map(line => safeSplit(line, delim));
 
-  render(data);
-  handleCelebration(data);
+      const data = rows.map(cols => {
+        const name = (cols[lagIdx] ?? "").trim();
+        const scoreRaw = (cols[poengIdx] ?? "").trim().replace(",", ".");
+        const score = Number(scoreRaw) || 0;
 
-  statusEl.textContent="Oppdatert: "+new Date().toLocaleTimeString();
+        if (endIdx !== -1) {
+          const v = (cols[endIdx] ?? "").toString().trim().toLowerCase();
+          if (v && END_VALUES.has(v)) ended = true;
+        }
 
-  if(ended){
-    showPodium(data);
-  }
-}
+        return { name, score };
+      }).filter(r => r.name);
 
-function showPodium(data){
-  const sorted=[...data].sort((a,b)=>b.score-a.score);
-  const top3=sorted.slice(0,3);
-  podium.innerHTML=`
-    <h2>🏆 Pallen 🏆</h2>
-    <p>🥇 ${top3[0]?.name} (${top3[0]?.score})</p>
-    <p>🥈 ${top3[1]?.name} (${top3[1]?.score})</p>
-    <p>🥉 ${top3[2]?.name} (${top3[2]?.score})</p>
-  `;
-  overlay.classList.add("show");
-  startConfetti(5000);
-}
+      return { data, ended };
+    }
 
-const canvas=document.getElementById("confetti");
-const ctx=canvas.getContext("2d");
+    function medals(index){
+      if(index === 0) return "🥇";
+      if(index === 1) return "🥈";
+      if(index === 2) return "🥉";
+      return "";
+    }
 
-function resize(){
-  canvas.width=window.innerWidth;
-  canvas.height=window.innerHeight;
-}
-window.addEventListener("resize",resize);
-resize();
+    function formatTime(){
+      return new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+    }
 
-function startConfetti(duration){
-  const pieces=150;
-  const confetti=Array.from({length:pieces},()=>({
-    x:Math.random()*canvas.width,
-    y:-20,
-    r:5+Math.random()*6,
-    vy:2+Math.random()*4,
-    vx:-2+Math.random()*4,
-    c:`hsl(${Math.random()*360},100%,60%)`
-  }));
+    // ===== FLIP animation for reorder =====
+    function animateReorder(){
+      const rows = Array.from(board.children);
+      const first = new Map(rows.map(el => [el.dataset.key, el.getBoundingClientRect()]));
 
-  const start=Date.now();
+      // After DOM update we call this again to animate; handled in render()
+      return first;
+    }
 
-  function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    confetti.forEach(p=>{
-      p.x+=p.vx;
-      p.y+=p.vy;
-      ctx.fillStyle=p.c;
-      ctx.fillRect(p.x,p.y,p.r,p.r);
+    function playFLIP(firstRects){
+      const rows = Array.from(board.children);
+      rows.forEach(el => {
+        const key = el.dataset.key;
+        const first = firstRects.get(key);
+        const last = el.getBoundingClientRect();
+        if(!first) return;
+
+        const dx = first.left - last.left;
+        const dy = first.top - last.top;
+
+        if(dx || dy){
+          el.style.transform = `translate(${dx}px, ${dy}px)`;
+          el.style.transition = "transform 0s";
+          requestAnimationFrame(() => {
+            el.style.transition = "transform 550ms cubic-bezier(.2,.9,.2,1)";
+            el.style.transform = "translate(0,0)";
+          });
+        }
+      });
+    }
+
+    function render(data){
+      // Sort (poeng desc) + stabil sort på navn hvis lik poeng
+      data.sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "no"));
+
+      const newOrder = data.map(d => d.name);
+
+      // ta snapshot før vi endrer DOM (for FLIP)
+      const firstRects = animateReorder();
+
+      // Tøm alltid (hindrer duplikater)
+      board.innerHTML = "";
+
+      data.forEach((team, index) => {
+        const row = document.createElement("div");
+        row.className = "row";
+        row.dataset.key = team.name;
+
+        if(index === 0) row.classList.add("top1");
+        if(index === 1) row.classList.add("top2");
+        if(index === 2) row.classList.add("top3");
+
+        const medal = medals(index);
+
+        row.innerHTML = `
+          <div class="left">
+            <div class="rank">${index + 1}</div>
+            <div class="team">
+              <div class="teamName">${team.name}</div>
+              ${medal ? `<div class="badge">${medal}</div>` : ""}
+            </div>
+          </div>
+          <div class="score">${team.score}</div>
+        `;
+
+        board.appendChild(row);
+      });
+
+      // Hvis rekkefølgen endret seg: FLIP + bump topp 3
+      const changed = lastOrder.length && newOrder.join("|") !== lastOrder.join("|");
+      lastOrder = newOrder;
+
+      if(changed){
+        requestAnimationFrame(() => {
+          playFLIP(firstRects);
+          // Bump topp 3
+          Array.from(board.children).slice(0,3).forEach(el => {
+            el.classList.remove("bump");
+            void el.offsetWidth; // restart anim
+            el.classList.add("bump");
+          });
+        });
+      }
+    }
+
+    // ===== Confetti =====
+    const canvas = document.getElementById("confetti");
+    const ctx = canvas.getContext("2d");
+    let confetti = [];
+    let confettiAnim = null;
+
+    function resizeCanvas(){
+      canvas.width = window.innerWidth * devicePixelRatio;
+      canvas.height = window.innerHeight * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    }
+    window.addEventListener("resize", resizeCanvas);
+
+    function startConfetti(durationMs = 4500){
+      resizeCanvas();
+      canvas.classList.add("show");
+
+      const colors = ["#ffd84a","#7bf7ff","#ff5ad6","#7cff6b","#ffffff","#b58cff"];
+      confetti = Array.from({length: 180}, () => ({
+        x: Math.random()*window.innerWidth,
+        y: -20 - Math.random()*window.innerHeight*0.3,
+        r: 4 + Math.random()*6,
+        vy: 2 + Math.random()*6,
+        vx: -2 + Math.random()*4,
+        rot: Math.random()*Math.PI,
+        vr: -0.15 + Math.random()*0.3,
+        c: colors[Math.floor(Math.random()*colors.length)]
+      }));
+
+      const start = performance.now();
+      function tick(t){
+        const elapsed = t - start;
+        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+
+        confetti.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
+          p.vy += 0.02; // litt gravitasjon
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.c;
+          ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*1.6);
+          ctx.restore();
+        });
+
+        confetti = confetti.filter(p => p.y < window.innerHeight + 40);
+
+        if(elapsed < durationMs && confetti.length){
+          confettiAnim = requestAnimationFrame(tick);
+        }else{
+          canvas.classList.remove("show");
+          ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+          confettiAnim = null;
+        }
+      }
+      if(confettiAnim) cancelAnimationFrame(confettiAnim);
+      confettiAnim = requestAnimationFrame(tick);
+    }
+
+    function showFinalPodium(top3){
+      if(finalShown) return;
+      finalShown = true;
+
+      // Lag pallen: 2. plass til venstre, 1. i midten, 3. til høyre
+      const first = top3[0] || {name:"—", score:0};
+      const second = top3[1] || {name:"—", score:0};
+      const third = top3[2] || {name:"—", score:0};
+
+      podiumEl.innerHTML = `
+        <div class="pod p2">
+          <small>🥈 2. plass</small>
+          <div class="name">${second.name}</div>
+          <div class="pts">${second.score}</div>
+        </div>
+
+        <div class="pod p1">
+          <small>🥇 1. plass</small>
+          <div class="name">${first.name}</div>
+          <div class="pts">${first.score}</div>
+        </div>
+
+        <div class="pod p3">
+          <small>🥉 3. plass</small>
+          <div class="name">${third.name}</div>
+          <div class="pts">${third.score}</div>
+        </div>
+      `;
+
+      overlay.classList.add("show");
+      startConfetti();
+    }
+
+    closeBtn.addEventListener("click", () => {
+      overlay.classList.remove("show");
+      finalShown = false; // hvis du vil kunne trigge igjen, ellers sett til true for “en gang”
     });
-    if(Date.now()-start<duration){
-      requestAnimationFrame(draw);
-    }else{
-      ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    async function load() {
+      errorEl.style.display = "none";
+      statusEl.textContent = "Henter data…";
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 7000);
+
+      try {
+        const res = await fetch(DATA_URL + "&t=" + Date.now(), { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error("Kunne ikke hente data (HTTP " + res.status + ")");
+
+        const csv = await res.text();
+        const { data, ended } = parseCSV(csv);
+
+        render(data);
+
+        updatedEl.textContent = "Sist oppdatert: " + formatTime();
+        statusEl.textContent = "Oppdateres automatisk";
+
+        // Trigger pall hvis Avslutt=JA
+        if(ended){
+          const top3 = [...data].sort((a,b) => b.score - a.score || a.name.localeCompare(b.name, "no")).slice(0,3);
+          showFinalPodium(top3);
+        }
+
+      } catch (e) {
+        clearTimeout(timeout);
+        errorEl.style.display = "block";
+        errorEl.textContent =
+          "Feil ved lasting:\n\n" +
+          (e?.name === "AbortError" ? "Timeout (7 sek). Sjekk nett/blokkering." : (e?.message || e)) +
+          "\n\nSjekk:\n• At arket er delt: Alle med linken kan se\n• At rad 1 heter: Lag | Poeng (og evt Avslutt)\n• At du bruker riktig gid (fanen)";
+        statusEl.textContent = "Kunne ikke oppdatere.";
+        console.error(e);
+      }
     }
-  }
-  draw();
-}
 
-load();
-setInterval(load,REFRESH_MS);
-
-</script>
+    load();
+    setInterval(load, REFRESH_MS);
+  </script>
 </body>
 </html>
