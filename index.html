@@ -74,8 +74,8 @@
     const SHEET_ID = "1XmtpS4_F4vqQtcUWcUVOuEEdp9l6qrfKNDnHCD-oHSQ";
     const SHEET_NAME = "Poeng"; // må matche fanenavnet
     const DATA_URL =
-      `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
-
+  `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?` +
+  `tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}&tq=${encodeURIComponent("select A, B")}`;
     const REFRESH_MS = 10000;
 
     const board = document.getElementById("board");
