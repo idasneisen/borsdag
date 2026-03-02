@@ -143,16 +143,16 @@
         statusEl.textContent = "Oppdateres automatisk";
 
       }catch(e){
-        errorEl.style.display = "block";
-        errorEl.textContent =
-          "Feil ved lasting.\n\n" +
-          "Sjekk:\n" +
-          "• At arknavnet er riktig (nå: Poeng)\n" +
-          "• At kolonnene heter: Lag og Poeng";
-        statusEl.textContent = "Kunne ikke oppdatere.";
-      }
-    }
+  errorEl.style.display = "block";
+  errorEl.textContent = "Feil ved lasting:\n\n" + (e?.message || e);
+  statusEl.textContent = "Kunne ikke oppdatere.";
+  console.error("FETCH ERROR:", e);
+}
 
+const res = await fetch(DATA_URL + "?t=" + Date.now());
+console.log("STATUS", res.status);
+console.log("CONTENT-TYPE", res.headers.get("content-type"));
+      
     load();
     setInterval(load, REFRESH_MS);
   </script>
